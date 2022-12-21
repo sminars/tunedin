@@ -70,12 +70,15 @@ public class User implements KdTreeNode, Cloneable {
       return false;
     }
     User user = (User) o;
-    return this.membershipLength == user.membershipLength && this.userId.equals(user.userId)
-        && this.displayName.equals(user.displayName) && Objects.equals(this.refreshToken,
-        user.refreshToken) && this.currentSong.equals(user.currentSong) && Arrays.equals(
-        this.connections, user.connections) && Arrays.equals(this.historicalSongPoint,
-        user.historicalSongPoint) && Arrays.equals(this.historicalConnections,
-        user.historicalConnections) && Objects.equals(this.songLibrary, user.songLibrary);
+    return this.membershipLength == user.membershipLength
+        && this.userId.equals(user.userId)
+        && this.displayName.equals(user.displayName)
+        && Objects.equals(this.refreshToken, user.refreshToken)
+        && this.currentSong.equals(user.currentSong)
+        && Arrays.equals(this.connections, user.connections)
+        && Arrays.equals(this.historicalSongPoint, user.historicalSongPoint)
+        && Arrays.equals(this.historicalConnections, user.historicalConnections)
+        && Objects.equals(this.songLibrary, user.songLibrary);
   }
 
   @Override
@@ -184,7 +187,7 @@ public class User implements KdTreeNode, Cloneable {
 
   public Song getMostRecentSong()
       throws IOException, ParseException, ExecutionException, InterruptedException,
-      SpotifyWebApiException {
+          SpotifyWebApiException {
     // if spotify has been linked:
     if (this.hasRefreshToken()) {
       System.out.println("Refresh token present: " + this.getRefreshToken());
@@ -307,8 +310,13 @@ public class User implements KdTreeNode, Cloneable {
   public String[] findConnections(KdTree<Song> songTree) {
     HashSet<Song> excluded = new HashSet<Song>();
     excluded.add(this.getCurrentSong());
-    PriorityQueue<Song> connectionsQueue = songTree.kdTreeSearch(
-        "neighbors", 5, this.getCurrentSong(), new DistanceSorter(this.getCurrentSong()), excluded);
+    PriorityQueue<Song> connectionsQueue =
+        songTree.kdTreeSearch(
+            "neighbors",
+            5,
+            this.getCurrentSong(),
+            new DistanceSorter(this.getCurrentSong()),
+            excluded);
     // reverse order of connections for array bc queue is in decreasing order of distance
     String[] connections = new String[5];
     int i = connectionsQueue.size() - 1;
@@ -322,8 +330,8 @@ public class User implements KdTreeNode, Cloneable {
   public String[] findHistoricalConnections(KdTree<User> userTree) {
     HashSet<User> excluded = new HashSet<User>();
     excluded.add(this);
-    PriorityQueue<User> connectionsQueue = userTree.kdTreeSearch(
-        "neighbors", 5, this, new DistanceSorter(this), excluded);
+    PriorityQueue<User> connectionsQueue =
+        userTree.kdTreeSearch("neighbors", 5, this, new DistanceSorter(this), excluded);
     // reverse order of connections for array bc queue is in decreasing order of distance
     String[] connections = new String[5];
     int i = connectionsQueue.size() - 1;

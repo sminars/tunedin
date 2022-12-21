@@ -283,9 +283,7 @@ public class KdTreeTest {
     assertArrayEquals(radiusNoIgnoreNaive.toArray(), radiusNoIgnore.toArray());
   }
 
-  /**
-   * Tests delete node, where the node is a leaf.
-   */
+  /** Tests delete node, where the node is a leaf. */
   @Test
   public void testDeleteLeafNode() {
     setUpOddPoints();
@@ -326,9 +324,7 @@ public class KdTreeTest {
     assertEquals("[6.0, 4.0]", Arrays.toString(rightRight.getHead().getPoint()));
   }
 
-  /**
-   * Tests delete node, where the node is the root.
-   */
+  /** Tests delete node, where the node is the root. */
   @Test
   public void testDeleteRoot() {
     setUpOddPoints();
@@ -372,9 +368,7 @@ public class KdTreeTest {
     assertNull(rightRight.getHead());
   }
 
-  /**
-   * Tests delete node, where the node is in the middle and has 2 children.
-   */
+  /** Tests delete node, where the node is in the middle and has 2 children. */
   @Test
   public void testDeleteMiddle() {
     setUpOddPoints();
@@ -417,9 +411,7 @@ public class KdTreeTest {
     assertEquals("[6.0, 4.0]", Arrays.toString(rightRight.getHead().getPoint()));
   }
 
-  /**
-   * Tests delete node, where the node has only a left child.
-   */
+  /** Tests delete node, where the node has only a left child. */
   @Test
   public void testDeleteWithLeftChild() {
     setUpOddPoints();
@@ -465,9 +457,7 @@ public class KdTreeTest {
     assertNull(rightRight.getHead());
   }
 
-  /**
-   * Tests delete node, where the node is not in the tree.
-   */
+  /** Tests delete node, where the node is not in the tree. */
   @Test
   public void testDeleteAbsent() {
     setUpOddPoints();
@@ -508,9 +498,7 @@ public class KdTreeTest {
     assertEquals("[6.0, 4.0]", Arrays.toString(rightRight.getHead().getPoint()));
   }
 
-  /**
-   * Tests delete node, where the tree is empty.
-   */
+  /** Tests delete node, where the tree is empty. */
   @Test
   public void testDeleteFromEmpty() {
     setUpEmptyTree();

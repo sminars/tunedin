@@ -9,15 +9,14 @@ import spark.Response;
 import spark.Route;
 import user.User;
 
-/**
- * Handler class for the get-user endpoint
- */
+/** Handler class for the get-user endpoint */
 public class GetUserHandler implements Route {
 
   UserDatabase database;
 
   /**
    * Constructor
+   *
    * @param database that stores users
    */
   public GetUserHandler(UserDatabase database) {
@@ -26,6 +25,7 @@ public class GetUserHandler implements Route {
 
   /**
    * Retrieves user from database using the request query parameter id
+   *
    * @param request
    * @param response
    * @return a serialized success or error response
@@ -43,6 +43,7 @@ public class GetUserHandler implements Route {
 
   /**
    * Response object to send with User object
+   *
    * @param result - success message
    * @param user - User object that was retrieved from the database
    */

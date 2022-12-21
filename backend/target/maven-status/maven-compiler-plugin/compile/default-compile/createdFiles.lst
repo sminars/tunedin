@@ -3,7 +3,6 @@ csv/CreatorFromRow.class
 server/handlers/LoadSongFeaturesHandler$LoadSongFeaturesSuccessResponse.class
 server/Constants.class
 server/handlers/LoadSongFeaturesHandler.class
-user/UserDatabase.class
 server/Server.class
 kdtree/AxisSorter.class
 kdtree/KdTreeNode.class
@@ -14,13 +13,11 @@ kdtree/KdTree.class
 server/ExternalAPIHandler.class
 server/handlers/LoadConnectionsHandler.class
 csv/CSVParser.class
-server/Database.class
 server/ErrBadJsonResponse.class
 kdtree/Point.class
 user/User.class
 server/handlers/LoadConnectionsHandler$LoadConnectionsSuccessResponse.class
 server/ErrDatasourceResponse.class
 server/ErrBadRequestResponse.class
-user/Song.class
 server/handlers/GetUserHandler.class
 user/UserFactory.class

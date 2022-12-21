@@ -1,23 +1,19 @@
 package server.handlers;
 
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.squareup.moshi.Moshi;
+import database.UserDatabase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import kdtree.KdTree;
-import database.UserDatabase;
 import server.ErrBadJsonResponse;
+import song.Song;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import song.Song;
 import user.User;
 
-/**
- * Handler for the load-connections endpoint
- */
+/** Handler for the load-connections endpoint */
 public class LoadConnectionsHandler implements Route {
 
   private UserDatabase database;
@@ -32,15 +28,15 @@ public class LoadConnectionsHandler implements Route {
   }
 
   /**
-   * Method that handles the GET request and outputs a serialized response.
-   * Calculates each user's connections and historical connections using the k-tree
-   * and then updates the user object.
+   * Method that handles the GET request and outputs a serialized response. Calculates each user's
+   * connections and historical connections using the k-tree and then updates the user object.
+   *
    * @param request - the request to handle
    * @param response - the response to modify
    * @return A serialized success response or error response
    */
   @Override
-  public Object handle(Request request, Response response)  {
+  public Object handle(Request request, Response response) {
     try {
       // build kd trees for finding nearest neighbors
       System.out.println("Constructing user and song trees...");
@@ -83,6 +79,7 @@ public class LoadConnectionsHandler implements Route {
 
   /**
    * Response object to send with User object
+   *
    * @param result - success message
    */
   public record LoadConnectionsSuccessResponse(String result) {
@@ -106,5 +103,4 @@ public class LoadConnectionsHandler implements Route {
       }
     }
   }
- 
 }

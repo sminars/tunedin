@@ -17,9 +17,9 @@ public class SongFactory implements CreatorFromRow<Song> {
     List<String> artists = Arrays.asList(row.get(2).split(";"));
     String[] featuresStr = row.get(3).split(";");
     double[] features = new double[6];
-      for (int i = 0; i < featuresStr.length; i++) {
-        features[i] = Double.parseDouble(featuresStr[i]);
-      }
+    for (int i = 0; i < featuresStr.length; i++) {
+      features[i] = Double.parseDouble(featuresStr[i]);
+    }
     return new Song(title, id, artists, features);
   }
 }

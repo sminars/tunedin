@@ -28,6 +28,7 @@ public class FirestoreDatabase implements UserDatabase {
 
   /**
    * Constructor that takes care of setting up the Firestore configurations
+   *
    * @param filepath - filepath of a private file that stores sensitive credential information
    * @param projectId - id of our Firestore project
    */
@@ -48,16 +49,14 @@ public class FirestoreDatabase implements UserDatabase {
     }
   }
 
-  /**
-   * Getter method to retrieve the Firestore object
-   */
+  /** Getter method to retrieve the Firestore object */
   public Firestore getFireStore() {
     return this.firestore;
   }
 
-
   /**
    * Generates specific a User object from its document reference stored in Firestore
+   *
    * @param userId - id of user to retrieve from Firestore
    * @return - User object
    */
@@ -100,14 +99,15 @@ public class FirestoreDatabase implements UserDatabase {
           this.listToStrArray(connections),
           this.listToDoubleArray(historicalSongPoint),
           this.listToStrArray(historicalConnections));
-    } catch (ExecutionException | InterruptedException e){
+    } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
   }
 
   /**
-   * Helper method that converts a List<Double> to a double[].
-   * Useful because Firestore is incompatible with Java Array Objects.
+   * Helper method that converts a List<Double> to a double[]. Useful because Firestore is
+   * incompatible with Java Array Objects.
+   *
    * @param lst - lst retrieved from Firestore
    * @return double[] with the same contents as the list
    */
@@ -124,8 +124,9 @@ public class FirestoreDatabase implements UserDatabase {
   }
 
   /**
-   * Helper method that converts a List<String> to a String[]
-   * Useful because Firestore is incompatible with Java Array Objects
+   * Helper method that converts a List<String> to a String[] Useful because Firestore is
+   * incompatible with Java Array Objects
+   *
    * @param lst - lst retrieved from Firestore
    * @return String[] with the same contents as the list
    */
@@ -143,6 +144,7 @@ public class FirestoreDatabase implements UserDatabase {
 
   /**
    * Updates the Firestore document reference of a specific user
+   *
    * @param userId - id of user to update
    * @param user - User object containing the updated fields
    */
@@ -168,12 +170,14 @@ public class FirestoreDatabase implements UserDatabase {
 
   /**
    * Updates the Firestore document reference with new Song information for a specific user
+   *
    * @param docRef - document reference of user to update
    * @param song - Song object with updated fields
    * @throws ExecutionException
    * @throws InterruptedException
    */
-  private void updateUserSong(DocumentReference docRef, Song song) throws ExecutionException, InterruptedException {
+  private void updateUserSong(DocumentReference docRef, Song song)
+      throws ExecutionException, InterruptedException {
     Map<String, Object> songMap = new HashMap();
     songMap.put("userId", song.getUserId());
     songMap.put("title", song.getTitle());
@@ -186,6 +190,7 @@ public class FirestoreDatabase implements UserDatabase {
 
   /**
    * Retrieves all user ids from Firestore users collection
+   *
    * @return List<String> of all user ids
    */
   @Override

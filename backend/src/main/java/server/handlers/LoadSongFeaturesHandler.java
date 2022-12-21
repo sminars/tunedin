@@ -1,27 +1,26 @@
 package server.handlers;
 
 import com.squareup.moshi.Moshi;
+import database.UserDatabase;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.apache.hc.core5.http.ParseException;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
-import database.UserDatabase;
+import song.Song;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import song.Song;
 import user.User;
 
-/**
- * Handler for load-song-features endpoing
- */
+/** Handler for load-song-features endpoing */
 public class LoadSongFeaturesHandler implements Route {
 
   private UserDatabase database;
 
   /**
    * Constructor
+   *
    * @param database that stores users
    */
   public LoadSongFeaturesHandler(UserDatabase database) {
@@ -29,8 +28,9 @@ public class LoadSongFeaturesHandler implements Route {
   }
 
   /**
-   * Method that handles the GET request and outputs a serialized response.
-   * Retrieves each user's most recent song and then updates the user object.
+   * Method that handles the GET request and outputs a serialized response. Retrieves each user's
+   * most recent song and then updates the user object.
+   *
    * @param request - the request to handle
    * @param response - the response to modify
    * @return A serialized success response or error response
@@ -63,9 +63,9 @@ public class LoadSongFeaturesHandler implements Route {
     return new LoadSongFeaturesSuccessResponse(userIds).serialize();
   }
 
-
   /**
    * Response object to send with User object
+   *
    * @param result - success message
    * @param updatedUsers - list of user ids corresponding to users that were updated in the database
    */

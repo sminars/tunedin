@@ -3,7 +3,6 @@ package server;
 import static server.Constants.FIRESTORE_JSON_FILEPATH;
 import static server.Constants.MOCK_SONGS_FILEPATH;
 import static server.Constants.MOCK_USERS_FILEPATH;
-
 import static spark.Spark.after;
 
 import csv.CSVParser;
@@ -38,11 +37,12 @@ public class Server {
    */
   public static LocalDatabase createLocalDatabase() {
     try {
-      CSVParser<Song> songCSVParser = new CSVParser<>(new FileReader(MOCK_SONGS_FILEPATH), new SongFactory());
+      CSVParser<Song> songCSVParser =
+          new CSVParser<>(new FileReader(MOCK_SONGS_FILEPATH), new SongFactory());
       SongLibrary songLibrary = new SongLibrary(songCSVParser);
 
-      CSVParser<User> userCSVParser = new CSVParser<>(
-          new FileReader(MOCK_USERS_FILEPATH), new UserFactory(songLibrary));
+      CSVParser<User> userCSVParser =
+          new CSVParser<>(new FileReader(MOCK_USERS_FILEPATH), new UserFactory(songLibrary));
 
       return new LocalDatabase(userCSVParser.getParsedData());
     } catch (IOException | FactoryFailureException e) {

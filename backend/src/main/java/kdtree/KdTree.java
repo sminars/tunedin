@@ -309,7 +309,8 @@ public class KdTree<T extends KdTreeNode> {
     // if point to delete is present at this root
     if (this.getHead().equals(nodeToDelete)) {
       if (this.getRight().getHead() != null) {
-        // find minimum in right subtree to get 'inorder successor' to replace position of the node being deleted
+        // find minimum in right subtree to get 'inorder successor' to replace position of the node
+        // being deleted
         KdTree<T> minNode = this.right.findMinNode(currentDimension);
         this.head = minNode.getHead();
         this.right = this.right.deleteNodeRecursive(minNode.getHead(), depth + 1);
@@ -365,14 +366,12 @@ public class KdTree<T extends KdTreeNode> {
       if (this.left.getHead() == null) {
         return this;
       }
-      return this.min(this,
-          this.left.findMinimumRecursive(axis, depth + 1),
-          null,
-          axis);
+      return this.min(this, this.left.findMinimumRecursive(axis, depth + 1), null, axis);
     }
     // otherwise, a better minimum may be anywhere down the tree
     // find the minimum of the given axis from here onward
-    return this.min(this,
+    return this.min(
+        this,
         this.left.findMinimumRecursive(axis, depth + 1),
         this.right.findMinimumRecursive(axis, depth + 1),
         axis);
@@ -403,12 +402,17 @@ public class KdTree<T extends KdTreeNode> {
     if (this.head == null) {
       return "null";
     }
-    return "KdTree{" +
-        "head=" + head.toString() +
-        ", left=" + left.toString() +
-        ", right=" + right.toString() +
-        ", axis=" + axis +
-        ", kdTreeNodes=" + kdTreeNodes.toString() +
-        '}';
+    return "KdTree{"
+        + "head="
+        + head.toString()
+        + ", left="
+        + left.toString()
+        + ", right="
+        + right.toString()
+        + ", axis="
+        + axis
+        + ", kdTreeNodes="
+        + kdTreeNodes.toString()
+        + '}';
   }
 }

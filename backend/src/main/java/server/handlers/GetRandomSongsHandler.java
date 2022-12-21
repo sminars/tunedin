@@ -5,10 +5,10 @@ import com.squareup.moshi.Moshi;
 import java.util.ArrayList;
 import java.util.List;
 import song.RandomSpotifySongSearch;
+import song.Song;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import song.Song;
 
 public class GetRandomSongsHandler implements Route {
 
@@ -35,13 +35,16 @@ public class GetRandomSongsHandler implements Route {
 
   public record GetRandomSongsSuccessResponse(String result, List<Song> songs) {
 
-    public GetRandomSongsSuccessResponse(List<Song> songs) { this("success", songs); }
+    public GetRandomSongsSuccessResponse(List<Song> songs) {
+      this("success", songs);
+    }
 
     public String serialize() {
       try {
         Moshi moshi = new Moshi.Builder().build();
 
-        JsonAdapter<GetRandomSongsSuccessResponse> adapter = moshi.adapter(GetRandomSongsSuccessResponse.class);
+        JsonAdapter<GetRandomSongsSuccessResponse> adapter =
+            moshi.adapter(GetRandomSongsSuccessResponse.class);
         return adapter.toJson(this);
       } catch (Exception e) {
         e.printStackTrace();
@@ -51,6 +54,7 @@ public class GetRandomSongsHandler implements Route {
   }
 
   String CSV_SEPARATOR = ",";
+
   private void convertToCSV(List<Song> songs) {
     for (Song song : songs) {
       StringBuffer oneLine = new StringBuffer();

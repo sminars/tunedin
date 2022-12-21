@@ -2,10 +2,8 @@ package user;
 
 import csv.CreatorFromRow;
 import csv.FactoryFailureException;
-import java.util.ArrayList;
 import java.util.List;
 import song.Song;
-import song.SongFactory;
 import song.SongLibrary;
 
 /** Creates User objects from a List of Strings */
@@ -36,15 +34,16 @@ public class UserFactory implements CreatorFromRow<User> {
     }
     String[] historicalConnections = row.get(6).split(";");
 
-    User user = new User(
-        userId,
-        displayName,
-        refreshToken,
-        membershipLength,
-        currentSong,
-        connections,
-        historicalSongPoint,
-        historicalConnections);
+    User user =
+        new User(
+            userId,
+            displayName,
+            refreshToken,
+            membershipLength,
+            currentSong,
+            connections,
+            historicalSongPoint,
+            historicalConnections);
     // add song library for access in getting new most recent song
     user.setSongLibrary(this.songLibrary);
     return user;

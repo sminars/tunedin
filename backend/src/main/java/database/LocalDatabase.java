@@ -35,10 +35,11 @@ public class LocalDatabase implements UserDatabase {
    */
   @Override
   public User getUser(String userId) {
-    if(this.userMap.containsKey(userId)){
+    if (this.userMap.containsKey(userId)) {
       return this.userMap.get(userId).clone();
     } else {
-      throw new RuntimeException("Local Database does not contain a user corresponding to the given user id");
+      throw new RuntimeException(
+          "Local Database does not contain a user corresponding to the given user id");
     }
   }
 
