@@ -2,48 +2,51 @@
 
 import csv.CreatorFromRow;
 import csv.FactoryFailureException;
-import java.util.Arrays;
 import java.util.List;
+import song.Song;
+import song.SongLibrary;
 
 /** Creates User objects from a List of Strings */
-<span class="nc" id="L9">public class UserFactory implements CreatorFromRow&lt;User&gt; {</span>
+public class UserFactory implements CreatorFromRow&lt;User&gt; {
+
+  SongLibrary songLibrary;
+
+<span class="fc" id="L14">  public UserFactory(SongLibrary songLibrary) {</span>
+<span class="fc" id="L15">    this.songLibrary = songLibrary;</span>
+<span class="fc" id="L16">  }</span>
 
   @Override
   public User create(List&lt;String&gt; row) throws FactoryFailureException {
-<span class="nc bnc" id="L13" title="All 2 branches missed.">    if (row.size() != 9) {</span>
-<span class="nc" id="L14">      throw new FactoryFailureException(row);</span>
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">    if (row.size() != 7) {</span>
+<span class="nc" id="L21">      throw new FactoryFailureException(row);</span>
     }
-    try {
-<span class="nc" id="L17">      String username = row.get(0);</span>
-<span class="nc" id="L18">      int membershipLength = Integer.parseInt(row.get(1));</span>
-<span class="nc" id="L19">      String title = row.get(2);</span>
-<span class="nc" id="L20">      String id = row.get(3);</span>
-<span class="nc" id="L21">      List&lt;String&gt; artists = Arrays.stream(row.get(4).split(&quot; &quot;)).toList();</span>
-<span class="nc" id="L22">      String[] songPointStr = row.get(5).split(&quot; &quot;);</span>
-<span class="nc" id="L23">      float[] features = new float[6];</span>
-<span class="nc bnc" id="L24" title="All 2 branches missed.">      for (int i = 0; i &lt; songPointStr.length; i++) {</span>
-<span class="nc" id="L25">        features[i] = Float.parseFloat(songPointStr[i]);</span>
-      }
-<span class="nc" id="L27">      Song currentSong = new Song(title, id, artists, features, username);</span>
-
-<span class="nc" id="L29">      String[] connections = row.get(6).split(&quot; &quot;);</span>
-<span class="nc" id="L30">      String[] historicalConnectionsStr = row.get(7).split(&quot; &quot;);</span>
-<span class="nc" id="L31">      float[] historicalSongPoint = new float[6];</span>
-<span class="nc bnc" id="L32" title="All 2 branches missed.">      for (int i = 0; i &lt; historicalConnectionsStr.length; i++) {</span>
-<span class="nc" id="L33">        historicalSongPoint[i] = Float.parseFloat(historicalConnectionsStr[i]);</span>
-      }
-<span class="nc" id="L35">      String[] historicalConnections = row.get(8).split(&quot; &quot;);</span>
-
-<span class="nc" id="L37">      return new User(</span>
-          username,
-          membershipLength,
-          currentSong,
-          connections,
-          historicalSongPoint,
-          historicalConnections);
-<span class="nc" id="L44">    } catch (NumberFormatException e) {</span>
-<span class="nc" id="L45">      throw new FactoryFailureException(row);</span>
+<span class="fc" id="L23">    String userId = row.get(0);</span>
+<span class="fc" id="L24">    String displayName = row.get(1);</span>
+<span class="fc" id="L25">    String refreshToken = row.get(2);</span>
+<span class="fc" id="L26">    int membershipLength = Integer.parseInt(row.get(3));</span>
+<span class="fc" id="L27">    Song currentSong = this.songLibrary.getRandom();</span>
+<span class="fc" id="L28">    currentSong.setUserId(userId);</span>
+<span class="fc" id="L29">    String[] connections = row.get(4).split(&quot;;&quot;);</span>
+<span class="fc" id="L30">    String[] historicalSPStr = row.get(5).split(&quot;;&quot;);</span>
+<span class="fc" id="L31">    double[] historicalSongPoint = new double[6];</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">    for (int i = 0; i &lt; historicalSPStr.length; i++) {</span>
+<span class="fc" id="L33">      historicalSongPoint[i] = Double.parseDouble(historicalSPStr[i]);</span>
     }
+<span class="fc" id="L35">    String[] historicalConnections = row.get(6).split(&quot;;&quot;);</span>
+
+<span class="fc" id="L37">    User user =</span>
+        new User(
+            userId,
+            displayName,
+            refreshToken,
+            membershipLength,
+            currentSong,
+            connections,
+            historicalSongPoint,
+            historicalConnections);
+    // add song library for access in getting new most recent song
+<span class="fc" id="L48">    user.setSongLibrary(this.songLibrary);</span>
+<span class="fc" id="L49">    return user;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

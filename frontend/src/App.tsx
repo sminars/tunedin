@@ -2,7 +2,7 @@ import React, { useState, Dispatch, SetStateAction, useEffect, useCallback } fro
 import GraphVis, { camtarg, getsortmethod, slidenum, sortshift, updatecamcenter } from './GraphVis'
 import logo from './logo.svg';
 import './styles/App.css';
-import {firebaseConfig} from './private/firebaseconfig'
+import {firebaseConfig, privClientID, privClientSecret} from './private/firebaseconfig'
 import * as d3 from 'd3';
 import { signInWithGoogle } from './GoogleLogin';
 import { SpotifyLoginButton} from './SpotifyAuth';
@@ -38,10 +38,13 @@ import { updateuserdata } from './backendhandler';
 //[DONE]: If you can't find the current google user in the userlist(mocked data), consider making a separate screen?
 //[DONE]: add a cute credits/about us section
 
-//FRONTEND TODO:
-//TODO: COMMENT EVERYTHING
-//TODO: CLEAN UP AND TEST
+// FRONTEND TODO:
+// TODO: COMMENT EVERYTHING
+// TODO: CLEAN UP AND TEST
 
+// set this to be true or false depending on if you want to display mocked users or not. This value should match
+// the value of the USING_MOCKS environment variable on the backend.
+let usingmocks: boolean = false;
 
 // A function takes maxnum and randomly generates that many user coordinates across our screen.
 // The general template for a set of "user coordinates" is as follows:
@@ -126,7 +129,7 @@ function aboutusinfo(){
           />
           <text className = "whitetext2" x = "20" y = "25"
           onClick={()=>{aboutusdisplay = false}}>
-          {"[Click to close window]"}
+          {"[Click right here to close this window]"}
           </text>
 
           <text className = "whitetext2" x = "20" y = "75">
@@ -200,7 +203,7 @@ function hidebutton(CurrentGoogleUser: string): string{
 // Used when determining if a user has logged in fully but is not one of
 // Tunedin's spotify-developer-greenlisted users.
 function showgoogleuserstring(CurrentGoogleUser: string){
-  if(userunregistered){
+  if(userunregistered && !usingmocks ){
     return ""
   }
   else{
@@ -208,12 +211,11 @@ function showgoogleuserstring(CurrentGoogleUser: string){
   }
 }
 
-
 // If a user is not one of Tunedin's spotify developer greenlisted users, this function returns a set of
 // warnings that bounce around the screen, instructing the user to contact the team at team.tunein@gmail.com 
 // to be allowed access into the app
 function warningscreen(Timer: number){
-  if(userunregistered){
+  if(userunregistered && !usingmocks){
     return <svg className="warningscreen" width = "100%" height = "100%">
       {[0,1,2,3,4].map((x)=> {return <image href="https://i.ibb.co/8dYvrr8/Screen-Shot-2022-12-20-at-12-40-41-AM.png"
       x={0+800*sawtooth(3*(Timer+x/5))}
@@ -376,7 +378,7 @@ function App() {
         <img className = "tuneinlogo" src="https://i.ibb.co/rFTJDTr/tuneinlogo2.png" aria-label = "Logo for the tunedin website"/>
       </p>
       {/* Main user bubble visualizer. Takes in a whole bunch of parameters for testing */}
-      {GraphVis(showgoogleuserstring(CurrentGoogleUser), SpotifyLinked && !userunregistered, usersloaded, fetchingusers, usersongparams, userdatastrings, matchesdata, Timer,
+      {GraphVis(showgoogleuserstring(CurrentGoogleUser), SpotifyLinked && (!userunregistered || usingmocks), usersloaded, fetchingusers, usersongparams, userdatastrings, matchesdata, Timer,
        userIDs, CircleData, SortParameter, SortIndex, camcenter, SelectIndex, zoomval, zoomed, alltime, curruserindex,
        Setalltime, setSelectIndex, Setzoomed, setSortParameter, setSortIndex)}
        {/* Spotify login button */}

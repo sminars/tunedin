@@ -1,57 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">s0</a> &gt; <a href="index.source.html" class="el_package">server</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package server;
 
+import static server.Constants.FIRESTORE_JSON_FILEPATH;
+import static server.Constants.MOCK_SONGS_FILEPATH;
+import static server.Constants.MOCK_USERS_FILEPATH;
 import static spark.Spark.after;
 
 import csv.CSVParser;
 import csv.FactoryFailureException;
+import database.FirestoreDatabase;
+import database.LocalDatabase;
+import database.UserDatabase;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import server.handlers.GetUserHandler;
+import server.handlers.GetUserIdsHandler;
 import server.handlers.LoadConnectionsHandler;
 import server.handlers.LoadSongFeaturesHandler;
+import song.Song;
+import song.SongFactory;
+import song.SongLibrary;
 import spark.Spark;
 import user.User;
-import user.UserDatabase;
 import user.UserFactory;
 
 /**
  * Top-level class to run our API server. Contains the main() method which starts Spark and runs the
  * various handlers.
  */
-<span class="nc" id="L22">public class Server {</span>
+<span class="nc" id="L30">public class Server {</span>
+  // constants to change users, songs, and firestore parameters
 
   /**
-   * Creates a List of User objects from a csv of mock users.
+   * Creates local database to run server using locally stored mock users and songs.
    *
-   * @return a List of Users
+   * @return a local database
    */
-  public static List&lt;User&gt; generateMockUsers() {
+  public static LocalDatabase createLocalDatabase() {
     try {
-<span class="nc" id="L31">      CSVParser&lt;User&gt; userCSVParser =</span>
-          new CSVParser&lt;User&gt;(new FileReader(&quot;data/mockUsers.csv&quot;), new UserFactory());
-<span class="nc" id="L33">      return userCSVParser.getParsedData();</span>
-<span class="nc" id="L34">    } catch (IOException | FactoryFailureException e) {</span>
-<span class="nc" id="L35">      throw new RuntimeException(e);</span>
+<span class="nc" id="L40">      CSVParser&lt;Song&gt; songCSVParser =</span>
+          new CSVParser&lt;&gt;(new FileReader(MOCK_SONGS_FILEPATH), new SongFactory());
+<span class="nc" id="L42">      SongLibrary songLibrary = new SongLibrary(songCSVParser);</span>
+
+<span class="nc" id="L44">      CSVParser&lt;User&gt; userCSVParser =</span>
+          new CSVParser&lt;&gt;(new FileReader(MOCK_USERS_FILEPATH), new UserFactory(songLibrary));
+
+<span class="nc" id="L47">      return new LocalDatabase(userCSVParser.getParsedData());</span>
+<span class="nc" id="L48">    } catch (IOException | FactoryFailureException e) {</span>
+<span class="nc" id="L49">      e.printStackTrace();</span>
+<span class="nc" id="L50">      throw new RuntimeException(e);</span>
     }
   }
 
-  /**
-   * Registers users from a list in the user database
-   *
-   * @param userDatabase - the user database to update
-   * @param users - the list of users to register
-   */
-  public static void registerUsers(UserDatabase userDatabase, List&lt;User&gt; users) {
-<span class="nc bnc" id="L46" title="All 2 branches missed.">    for (User user : users) {</span>
-<span class="nc" id="L47">      userDatabase.register(user);</span>
-<span class="nc" id="L48">    }</span>
-<span class="nc" id="L49">  }</span>
-
   public static void main(String[] args) {
-<span class="nc" id="L52">    Spark.port(3232);</span>
-<span class="nc" id="L53">    UserDatabase userDatabase = new UserDatabase();</span>
-<span class="nc" id="L54">    registerUsers(userDatabase, generateMockUsers());</span>
+<span class="nc" id="L55">    Spark.port(3232);</span>
 
     /*
        Setting CORS headers to allow cross-origin requests from the client; this is necessary for the client to
@@ -70,31 +71,32 @@ import user.UserFactory;
            - https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
            - https://portswigger.net/web-security/cors
     */
-<span class="nc" id="L73">    after(</span>
+<span class="nc" id="L74">    after(</span>
         (request, response) -&gt; {
-<span class="nc" id="L75">          response.header(&quot;Access-Control-Allow-Origin&quot;, &quot;*&quot;);</span>
-<span class="nc" id="L76">          response.header(&quot;Access-Control-Allow-Methods&quot;, &quot;*&quot;);</span>
-<span class="nc" id="L77">        });</span>
+<span class="nc" id="L76">          response.header(&quot;Access-Control-Allow-Origin&quot;, &quot;*&quot;);</span>
+<span class="nc" id="L77">          response.header(&quot;Access-Control-Allow-Methods&quot;, &quot;*&quot;);</span>
+<span class="nc" id="L78">        });</span>
 
-    // mock Points for now to build kd trees
+    // instantiate database
+    UserDatabase db;
+<span class="nc bnc" id="L82" title="All 2 branches missed.">    if (System.getenv(&quot;USING_MOCKS&quot;).equals(&quot;true&quot;)) {</span>
+<span class="nc" id="L83">      db = createLocalDatabase();</span>
+    } else {
+<span class="nc" id="L85">      db = new FirestoreDatabase(FIRESTORE_JSON_FILEPATH, System.getenv(&quot;FIRESTORE_PROJECT_ID&quot;));</span>
+    }
+<span class="nc" id="L87">    System.out.println(System.getenv(&quot;FIRESTORE_PROJECT_ID&quot;));</span>
 
     // Setting up the handler for the GET endpoints
-<span class="nc" id="L82">    Spark.get(&quot;load-connections&quot;, new LoadConnectionsHandler(userDatabase));</span>
-<span class="nc" id="L83">    Spark.get(&quot;get-user&quot;, new GetUserHandler(userDatabase));</span>
-<span class="nc" id="L84">    Spark.get(&quot;load-song-features&quot;, new LoadSongFeaturesHandler(userDatabase));</span>
+<span class="nc" id="L90">    Spark.get(&quot;load-song-features&quot;, new LoadSongFeaturesHandler(db));</span>
+<span class="nc" id="L91">    Spark.get(&quot;load-connections&quot;, new LoadConnectionsHandler(db));</span>
+<span class="nc" id="L92">    Spark.get(&quot;get-user&quot;, new GetUserHandler(db));</span>
+<span class="nc" id="L93">    Spark.get(&quot;get-all-user-ids&quot;, new GetUserIdsHandler(db));</span>
+    // just for generating mock songs to store in songs.csv
+    // Spark.get(&quot;get-random-songs&quot;, new GetRandomSongsHandler());
 
-    /*
-    Endpoints
-    - spotify calls
-    - getUsers --&gt; response = user database
-        - to be used on frontend for getting all users and displaying interactive clustering
-    - getUser?username=&lt;username&gt; --&gt; response = user object
-        - to be used on frontend for getting &amp; displaying top 5 connections to a logged in tune in user
-     */
-
-<span class="nc" id="L95">    Spark.init();</span>
-<span class="nc" id="L96">    Spark.awaitInitialization();</span>
-<span class="nc" id="L97">    System.out.println(&quot;Server started.&quot;);</span>
-<span class="nc" id="L98">  }</span>
+<span class="nc" id="L97">    Spark.init();</span>
+<span class="nc" id="L98">    Spark.awaitInitialization();</span>
+<span class="nc" id="L99">    System.out.println(&quot;Server started.&quot;);</span>
+<span class="nc" id="L100">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

@@ -11,9 +11,9 @@ public class DistanceSorter implements Comparator&lt;KdTreeNode&gt; {
    *
    * @param targetNode node by which to compare other nodes by euclidean distance.
    */
-<span class="nc" id="L14">  public DistanceSorter(KdTreeNode targetNode) {</span>
-<span class="nc" id="L15">    this.targetNode = targetNode;</span>
-<span class="nc" id="L16">  }</span>
+<span class="fc" id="L14">  public DistanceSorter(KdTreeNode targetNode) {</span>
+<span class="fc" id="L15">    this.targetNode = targetNode;</span>
+<span class="fc" id="L16">  }</span>
 
   /**
    * Compares two KDTreeNodes by their euclidean distance from targetNode.
@@ -25,9 +25,9 @@ public class DistanceSorter implements Comparator&lt;KdTreeNode&gt; {
   @Override
   public int compare(KdTreeNode o1, KdTreeNode o2) {
     try {
-<span class="nc" id="L28">      double o1Distance = this.targetNode.euclideanDistance(o1);</span>
-<span class="nc" id="L29">      double o2Distance = this.targetNode.euclideanDistance(o2);</span>
-<span class="nc" id="L30">      return Double.compare(o2Distance, o1Distance);</span>
+<span class="fc" id="L28">      double o1Distance = this.targetNode.euclideanDistance(o1);</span>
+<span class="fc" id="L29">      double o2Distance = this.targetNode.euclideanDistance(o2);</span>
+<span class="fc" id="L30">      return Double.compare(o2Distance, o1Distance);</span>
       // sort in descending order by euclidean distance
 <span class="nc" id="L32">    } catch (Exception ex) {</span>
 <span class="nc" id="L33">      System.err.println(&quot;ERROR: KDTreeNodes do not have the same dimensionality.&quot;);</span>

@@ -50,9 +50,9 @@ public class LoadConnectionsHandler implements Route {
       }
       System.out.println("User count: " + userNodes.size());
       System.out.println("Song count: " + songNodes.size());
-      KdTree<User> userTree = new KdTree<User>(userNodes, 1);
+      KdTree<User> userTree = new KdTree<User>(userNodes, 0);
       System.out.println("User Tree built.");
-      KdTree<Song> songTree = new KdTree<Song>(songNodes, 1);
+      KdTree<Song> songTree = new KdTree<Song>(songNodes, 0);
       System.out.println("Song Tree built.");
       for (User user : userNodes) {
         // create new user object so user in tree does not get modified

@@ -19,10 +19,10 @@ public class CSVParser&lt;T&gt; {
   private final Reader reader;
   private final CreatorFromRow&lt;T&gt; creator;
   private final List&lt;T&gt; parsedData;
-<span class="pc" id="L22">  private int wordCount = 0;</span>
-<span class="pc" id="L23">  private int charCount = 0;</span>
-<span class="pc" id="L24">  private int rowCount = 0;</span>
-<span class="pc" id="L25">  private int columnCount = 0;</span>
+<span class="fc" id="L22">  private int wordCount = 0;</span>
+<span class="fc" id="L23">  private int charCount = 0;</span>
+<span class="fc" id="L24">  private int rowCount = 0;</span>
+<span class="fc" id="L25">  private int columnCount = 0;</span>
 
   /**
    * Constructor with only an input reader.
@@ -42,11 +42,11 @@ public class CSVParser&lt;T&gt; {
    * @param creator - any object which implements CreatorFromRow
    */
   public CSVParser(Reader reader, CreatorFromRow&lt;T&gt; creator)
-<span class="nc" id="L45">      throws IOException, FactoryFailureException {</span>
-<span class="nc" id="L46">    this.reader = reader;</span>
-<span class="nc" id="L47">    this.creator = creator;</span>
-<span class="nc" id="L48">    this.parsedData = this.parse();</span>
-<span class="nc" id="L49">  }</span>
+<span class="fc" id="L45">      throws IOException, FactoryFailureException {</span>
+<span class="fc" id="L46">    this.reader = reader;</span>
+<span class="fc" id="L47">    this.creator = creator;</span>
+<span class="fc" id="L48">    this.parsedData = this.parse();</span>
+<span class="fc" id="L49">  }</span>
 
   /**
    * Private method to parse the CSV data in the provided Reader object, which is called in the

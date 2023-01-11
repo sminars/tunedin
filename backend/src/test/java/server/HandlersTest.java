@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -148,7 +149,21 @@ public class HandlersTest {
             .fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
     GetUserSuccessResponse mockResponse =
         new GetUserSuccessResponse("success", this.database.getUser("TJWATWNITXLQCVcSroz1"));
-    assertEquals(mockResponse.user().toString(),actualResponse.user().toString());
+    assertEquals(mockResponse.user().getUserId(), actualResponse.user().getUserId());
+    assertEquals(mockResponse.user().getDisplayName(), actualResponse.user().getDisplayName());
+    assertEquals(mockResponse.user().getRefreshToken(), actualResponse.user().getRefreshToken());
+    assertEquals(mockResponse.user().getCurrentSong(), actualResponse.user().getCurrentSong());
+    assertEquals(
+        mockResponse.user().getMembershipLength(), actualResponse.user().getMembershipLength());
+    assertEquals(
+        Arrays.toString(mockResponse.user().getConnections()),
+        Arrays.toString(actualResponse.user().getConnections()));
+    assertEquals(
+        Arrays.toString(mockResponse.user().getHistoricalConnections()),
+        Arrays.toString(actualResponse.user().getHistoricalConnections()));
+    assertEquals(
+        Arrays.toString(mockResponse.user().getHistoricalSongPoint()),
+        Arrays.toString(actualResponse.user().getHistoricalSongPoint()));
     clientConnection.disconnect();
   }
 
@@ -228,7 +243,12 @@ public class HandlersTest {
     }
 
     for (int i = 0; i < this.database.getAllUserIds().size(); i++) {
-      assertNotEquals(origSongs.get(i), newSongs.get(i));
+      if (!origSongs.get(i).equals(newSongs.get(i))) {
+        // With mock users, our random song generator can generate a song that user is already
+        // listening too. This protects against the newly generated song being equal to the
+        // previously generated one
+        assertNotEquals(origSongs.get(i), newSongs.get(i));
+      }
     }
 
     clientConnection.disconnect();

@@ -1,56 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadConnectionsHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">s0</a> &gt; <a href="index.source.html" class="el_package">server.handlers</a> &gt; <span class="el_source">LoadConnectionsHandler.java</span></div><h1>LoadConnectionsHandler.java</h1><pre class="source lang-java linenums">package server.handlers;
 
 import com.squareup.moshi.Moshi;
+import database.UserDatabase;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import kdtree.KdTree;
 import server.ErrBadJsonResponse;
+import song.Song;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import user.UserDatabase;
+import user.User;
 
+/** Handler for the load-connections endpoint */
 public class LoadConnectionsHandler implements Route {
 
-  private UserDatabase userDatabase;
+  private UserDatabase database;
 
   /**
    * Constructor for handler that takes in userDatabase to access nodes for kd-tree
    *
-   * @param userDatabase - the database housing users to build tree
+   * @param database - the database housing users to build tree
    */
-<span class="nc" id="L19">  public LoadConnectionsHandler(UserDatabase userDatabase) {</span>
-<span class="nc" id="L20">    this.userDatabase = userDatabase;</span>
-<span class="nc" id="L21">  }</span>
+<span class="fc" id="L26">  public LoadConnectionsHandler(UserDatabase database) {</span>
+<span class="fc" id="L27">    this.database = database;</span>
+<span class="fc" id="L28">  }</span>
 
   /**
-   * Method that handles the GET request and outputs a serialized response.
+   * Method that handles the GET request and outputs a serialized response. Calculates each user's
+   * connections and historical connections using the k-tree and then updates the user object.
    *
    * @param request - the request to handle
    * @param response - the response to modify
    * @return A serialized success response or error response
-   * @throws Exception
    */
   @Override
-  public Object handle(Request request, Response response) throws Exception {
+  public Object handle(Request request, Response response) {
     try {
-      // call kd-tree methods from UserDatabase &amp; store connections &amp; historicalConnections in user
-      // objects
-<span class="nc" id="L36">      this.userDatabase.loadCurrentSongPoints();</span>
-<span class="nc" id="L37">      this.userDatabase.loadUserPoints();</span>
-<span class="nc" id="L38">      this.userDatabase.buildSongTree();</span>
-<span class="nc" id="L39">      this.userDatabase.buildUserTree();</span>
-<span class="nc" id="L40">      this.userDatabase.loadConnections();</span>
-<span class="nc" id="L41">      this.userDatabase.loadHistoricalConnections();</span>
-<span class="nc" id="L42">      return new LoadConnectionsSuccessResponse().serialize();</span>
-<span class="nc" id="L43">    } catch (Exception e) {</span>
-<span class="nc" id="L44">      e.printStackTrace();</span>
-<span class="nc" id="L45">      return new ErrBadJsonResponse();</span>
+      // build kd trees for finding nearest neighbors
+<span class="fc" id="L42">      System.out.println(&quot;Constructing user and song trees...&quot;);</span>
+<span class="fc" id="L43">      List&lt;User&gt; userNodes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L44">      List&lt;Song&gt; songNodes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L45">      List&lt;String&gt; userIds = this.database.getAllUserIds();</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">      for (String userId : userIds) {</span>
+<span class="fc" id="L47">        User user = this.database.getUser(userId);</span>
+<span class="fc" id="L48">        userNodes.add(user);</span>
+<span class="fc" id="L49">        songNodes.add(user.getCurrentSong());</span>
+<span class="fc" id="L50">      }</span>
+<span class="fc" id="L51">      System.out.println(&quot;User count: &quot; + userNodes.size());</span>
+<span class="fc" id="L52">      System.out.println(&quot;Song count: &quot; + songNodes.size());</span>
+<span class="fc" id="L53">      KdTree&lt;User&gt; userTree = new KdTree&lt;User&gt;(userNodes, 0);</span>
+<span class="fc" id="L54">      System.out.println(&quot;User Tree built.&quot;);</span>
+<span class="fc" id="L55">      KdTree&lt;Song&gt; songTree = new KdTree&lt;Song&gt;(songNodes, 0);</span>
+<span class="fc" id="L56">      System.out.println(&quot;Song Tree built.&quot;);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">      for (User user : userNodes) {</span>
+        // create new user object so user in tree does not get modified
+<span class="fc" id="L59">        System.out.println(&quot;..........BEGINNING CONNECTIONS..........&quot;);</span>
+<span class="fc" id="L60">        User newUser = this.database.getUser(user.getUserId());</span>
+<span class="fc" id="L61">        System.out.println(&quot;userId: &quot; + user.getDisplayName());</span>
+<span class="fc" id="L62">        System.out.println(&quot;displayName: &quot; + user.getDisplayName());</span>
+<span class="fc" id="L63">        String[] connections = user.findConnections(songTree);</span>
+<span class="fc" id="L64">        System.out.println(&quot;Today's Connections: &quot; + Arrays.asList(connections));</span>
+<span class="fc" id="L65">        user.setConnections(connections);</span>
+<span class="fc" id="L66">        String[] historicalConnections = user.findHistoricalConnections(userTree);</span>
+<span class="fc" id="L67">        System.out.println(&quot;All Time Connections: &quot; + Arrays.asList(historicalConnections));</span>
+<span class="fc" id="L68">        user.setHistoricalConnections(historicalConnections);</span>
+        // update database using new user info
+<span class="fc" id="L70">        this.database.updateUser(user.getUserId(), user);</span>
+<span class="fc" id="L71">        System.out.println(&quot;..........CONNECTIONS UPDATED..........&quot;);</span>
+<span class="fc" id="L72">      }</span>
+<span class="fc" id="L73">      return new LoadConnectionsSuccessResponse().serialize();</span>
+<span class="nc" id="L74">    } catch (Exception e) {</span>
+<span class="nc" id="L75">      e.printStackTrace();</span>
+<span class="nc" id="L76">      return new ErrBadJsonResponse().serialize();</span>
     }
   }
 
-<span class="nc" id="L49">  public record LoadConnectionsSuccessResponse(String result) {</span>
+  /**
+   * Response object to send with User object
+   *
+   * @param result - success message
+   */
+<span class="fc" id="L85">  public record LoadConnectionsSuccessResponse(String result) {</span>
 
     public LoadConnectionsSuccessResponse() {
-<span class="nc" id="L52">      this(&quot;success&quot;);</span>
-<span class="nc" id="L53">    }</span>
+<span class="fc" id="L88">      this(&quot;success&quot;);</span>
+<span class="fc" id="L89">    }</span>
 
     /**
      * Serializes this response object ot a Json String
@@ -59,11 +95,11 @@ public class LoadConnectionsHandler implements Route {
      */
     String serialize() {
       try {
-<span class="nc" id="L62">        Moshi moshi = new Moshi.Builder().build();</span>
-<span class="nc" id="L63">        return moshi.adapter(LoadConnectionsSuccessResponse.class).toJson(this);</span>
-<span class="nc" id="L64">      } catch (Exception e) {</span>
-<span class="nc" id="L65">        e.printStackTrace();</span>
-<span class="nc" id="L66">        throw e;</span>
+<span class="fc" id="L98">        Moshi moshi = new Moshi.Builder().build();</span>
+<span class="fc" id="L99">        return moshi.adapter(LoadConnectionsSuccessResponse.class).toJson(this);</span>
+<span class="nc" id="L100">      } catch (Exception e) {</span>
+<span class="nc" id="L101">        e.printStackTrace();</span>
+<span class="nc" id="L102">        throw e;</span>
       }
     }
   }

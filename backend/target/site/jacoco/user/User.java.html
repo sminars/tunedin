@@ -1,174 +1,427 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">s0</a> &gt; <a href="index.source.html" class="el_package">user</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">package user;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Set;
+import kdtree.DistanceSorter;
+import kdtree.KdTree;
 import kdtree.KdTreeNode;
+import org.apache.hc.core5.http.ParseException;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.exceptions.detailed.ForbiddenException;
+import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
+import se.michaelthelin.spotify.model_objects.specification.AudioFeatures;
+import se.michaelthelin.spotify.model_objects.specification.PagingCursorbased;
+import se.michaelthelin.spotify.model_objects.specification.PlayHistory;
+import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
+import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
+import se.michaelthelin.spotify.requests.data.player.GetCurrentUsersRecentlyPlayedTracksRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetAudioFeaturesForTrackRequest;
+import song.Song;
+import song.SongLibrary;
 
-/**
- * Class representing an individual TuneIn user, which houses essential user-specific information.
- */
+/** Class representing a TunedIn user, which houses essential user-specific information. */
 public class User implements KdTreeNode, Cloneable {
-  private String username;
+  private String userId;
+  private String displayName;
+  private String refreshToken;
   private int membershipLength;
   private Song currentSong;
   private String[] connections;
-  private float[] historicalSongPoint;
+  private double[] historicalSongPoint;
   private String[] historicalConnections;
+  private transient SongLibrary songLibrary;
 
-  /**
-   * Constructor for new user
-   *
-   * @param username - TunedIn username, identifier for the user
-   */
-<span class="nc" id="L23">  public User(String username) {</span>
-<span class="nc" id="L24">    this.username = username;</span>
-<span class="nc" id="L25">    this.membershipLength = 0;</span>
-<span class="nc" id="L26">    this.currentSong = null;</span>
-<span class="nc" id="L27">    this.connections = new String[5];</span>
-<span class="nc" id="L28">    this.historicalSongPoint = new float[6];</span>
-<span class="nc" id="L29">    this.historicalConnections = new String[5];</span>
-<span class="nc" id="L30">  }</span>
-
-  /**
-   * Constructor for User object
-   *
-   * @param username - TuneIn username, identifier for the user
-   * @param membershipLength - days since joining TuneIn
-   * @param currentSong - currently playing song at the time of TunedIn
-   * @param connections - nearest neighbors from song points tree
-   * @param historicalSongPoint - avg audio features of all song points since joining
-   * @param historicalConnections - nearest neighbors from historical song points tree
-   */
   public User(
-      String username,
+      String userId,
+      String displayName,
+      String refreshToken,
       int membershipLength,
       Song currentSong,
       String[] connections,
-      float[] historicalSongPoint,
-<span class="nc" id="L48">      String[] historicalConnections) {</span>
-<span class="nc" id="L49">    this.username = username;</span>
-<span class="nc" id="L50">    this.membershipLength = membershipLength;</span>
-<span class="nc" id="L51">    this.currentSong = currentSong;</span>
-<span class="nc" id="L52">    this.connections = connections;</span>
-<span class="nc" id="L53">    this.historicalSongPoint = historicalSongPoint;</span>
-<span class="nc" id="L54">    this.historicalConnections = historicalConnections;</span>
-<span class="nc" id="L55">  }</span>
+      double[] historicalSongPoint,
+<span class="fc" id="L50">      String[] historicalConnections) {</span>
+<span class="fc" id="L51">    this.userId = userId;</span>
+<span class="fc" id="L52">    this.displayName = displayName;</span>
+<span class="fc" id="L53">    this.refreshToken = refreshToken;</span>
+<span class="fc" id="L54">    this.membershipLength = membershipLength;</span>
+<span class="fc" id="L55">    this.currentSong = currentSong;</span>
+<span class="fc" id="L56">    this.connections = connections;</span>
+<span class="fc" id="L57">    this.historicalSongPoint = historicalSongPoint;</span>
+<span class="fc" id="L58">    this.historicalConnections = historicalConnections;</span>
+<span class="fc" id="L59">  }</span>
 
-  @Override
-  public boolean equals(Object o) {
-<span class="nc bnc" id="L59" title="All 2 branches missed.">    if (this == o) {</span>
-<span class="nc" id="L60">      return true;</span>
+  /**
+   * Identifies a mock-specific attribute to identify a mock user. Checker used in other user
+   * methods to handle the absence of spotify-essential information.
+   *
+   * @return true if the user is mocked
+   */
+  public boolean isMocked() {
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">    return this.songLibrary != null;</span>
+  }
+
+  /**
+   * Identifies whether the user has a Spotify refresh token.
+   *
+   * @return true if the user has a refresh token
+   */
+  public boolean hasRefreshToken() {
+<span class="fc" id="L77">    Set&lt;String&gt; conditions = new HashSet&lt;&gt;(Arrays.asList(null, &quot;&quot;, &quot;\&quot;\&quot;&quot;, &quot; &quot;));</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">    return !conditions.contains(this.getRefreshToken());</span>
+  }
+
+  /**
+   * Gets the most recently played song from the Spotify API if the user has a refreshToken. If the
+   * user is mocked, selects a random song from the local SongLibrary. Otherwise, no song update is
+   * made (i.e. the current song).
+   *
+   * @return a Song object representing the new most-recently played song
+   * @throws IOException if an I/O exception occurs when executing a Spotify GET request
+   * @throws ParseException if an exception occurs when parsing the String parameters for Spotify
+   *     API GET requests.
+   * @throws SpotifyWebApiException if an exception occurs when getting an authorization token using
+   *     the refresh token, executing the spotify GET request for most recently played, or executing
+   *     the GET request for the audio features of the most recently played song.
+   */
+  public Song getMostRecentSong() throws ParseException, SpotifyWebApiException, IOException {
+    // if spotify has been linked &amp; registered to firestore:
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">    if (this.hasRefreshToken()) {</span>
+<span class="nc" id="L97">      System.out.println(&quot;Refresh token present: &quot; + this.getRefreshToken());</span>
+<span class="nc" id="L98">      String authToken = this.getAuthToken();</span>
+<span class="nc" id="L99">      SpotifyApi spotifyApi =</span>
+          new SpotifyApi.Builder()
+<span class="nc" id="L101">              .setClientId(System.getenv(&quot;CLIENT_ID&quot;))</span>
+<span class="nc" id="L102">              .setClientSecret(System.getenv(&quot;CLIENT_SECRET&quot;))</span>
+<span class="nc" id="L103">              .setAccessToken(authToken)</span>
+<span class="nc" id="L104">              .build();</span>
+
+<span class="nc" id="L106">      GetCurrentUsersRecentlyPlayedTracksRequest getCurrentUsersRecentlyPlayedTracksRequest =</span>
+<span class="nc" id="L107">          spotifyApi.getCurrentUsersRecentlyPlayedTracks().limit(1).build();</span>
+<span class="nc" id="L108">      System.out.println(&quot;Recently Played Request made. Will now execute...&quot;);</span>
+<span class="nc" id="L109">      PagingCursorbased&lt;PlayHistory&gt; playHistoryPagingCursorbased =</span>
+<span class="nc" id="L110">          getCurrentUsersRecentlyPlayedTracksRequest.execute();</span>
+<span class="nc" id="L111">      System.out.println(&quot;Successfully executed.&quot;);</span>
+
+<span class="nc" id="L113">      PlayHistory[] playHistories = playHistoryPagingCursorbased.getItems();</span>
+<span class="nc" id="L114">      System.out.println(&quot;Date/Time Played: &quot; + playHistories[0].getPlayedAt());</span>
+<span class="nc" id="L115">      TrackSimplified track = playHistories[0].getTrack();</span>
+
+<span class="nc" id="L117">      String title = track.getName();</span>
+<span class="nc" id="L118">      String id = track.getId();</span>
+      // artists
+<span class="nc" id="L120">      List&lt;String&gt; artists = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L121">      ArtistSimplified[] artistsSimp = track.getArtists();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">      for (ArtistSimplified artist : artistsSimp) {</span>
+<span class="nc" id="L123">        artists.add(artist.getName());</span>
+      }
+      // features
+<span class="nc" id="L126">      GetAudioFeaturesForTrackRequest getAudioFeaturesForTrackRequest =</span>
+<span class="nc" id="L127">          spotifyApi.getAudioFeaturesForTrack(id).build();</span>
+<span class="nc" id="L128">      AudioFeatures audioFeatures = getAudioFeaturesForTrackRequest.execute();</span>
+
+<span class="nc" id="L130">      double[] features = new double[6];</span>
+<span class="nc" id="L131">      features[0] = audioFeatures.getAcousticness();</span>
+<span class="nc" id="L132">      features[1] = audioFeatures.getDanceability();</span>
+<span class="nc" id="L133">      features[2] = audioFeatures.getEnergy();</span>
+<span class="nc" id="L134">      features[3] = audioFeatures.getInstrumentalness();</span>
+<span class="nc" id="L135">      features[4] = audioFeatures.getSpeechiness();</span>
+<span class="nc" id="L136">      features[5] = audioFeatures.getValence();</span>
+
+<span class="nc" id="L138">      return new Song(this.getUserId(), title, id, artists, features);</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">    } else if (this.isMocked()) {</span>
+<span class="fc" id="L140">      Song newSong = this.songLibrary.getRandom();</span>
+<span class="fc" id="L141">      newSong.setUserId(this.getUserId());</span>
+<span class="fc" id="L142">      return newSong;</span>
+    } else {
+      // perform get the last successful song update
+<span class="nc" id="L145">      return this.getCurrentSong();</span>
     }
-<span class="nc bnc" id="L62" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
-<span class="nc" id="L63">      return false;</span>
+  }
+
+  /**
+   * Helper method that takes in a user's refresh token and makes a call to the Spotify API to
+   * return a valid access token
+   *
+   * @return access token
+   */
+  private String getAuthToken() throws SpotifyWebApiException, ParseException {
+    try {
+<span class="nc" id="L157">      SpotifyApi spotifyApi =</span>
+          new SpotifyApi.Builder()
+<span class="nc" id="L159">              .setClientId(System.getenv(&quot;CLIENT_ID&quot;))</span>
+<span class="nc" id="L160">              .setClientSecret(System.getenv(&quot;CLIENT_SECRET&quot;))</span>
+<span class="nc" id="L161">              .setRefreshToken(this.getRefreshToken())</span>
+<span class="nc" id="L162">              .build();</span>
+<span class="nc" id="L163">      AuthorizationCodeRefreshRequest authorizationCodeRefreshRequest =</span>
+<span class="nc" id="L164">          spotifyApi.authorizationCodeRefresh().build();</span>
+<span class="nc" id="L165">      AuthorizationCodeCredentials authorizationCodeCredentials =</span>
+<span class="nc" id="L166">          authorizationCodeRefreshRequest.execute();</span>
+<span class="nc" id="L167">      return authorizationCodeCredentials.getAccessToken();</span>
+<span class="nc" id="L168">    } catch (IOException e) {</span>
+<span class="nc" id="L169">      System.out.println(&quot;Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L170">      throw new RuntimeException(e);</span>
+<span class="nc" id="L171">    } catch (ForbiddenException e) {</span>
+<span class="nc" id="L172">      System.out.println(&quot;Forbidden exception: &quot; + e.getMessage());</span>
+<span class="nc" id="L173">      throw new ForbiddenException(e.getMessage());</span>
     }
-<span class="nc" id="L65">    User user = (User) o;</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">    return membershipLength == user.membershipLength</span>
-<span class="nc bnc" id="L67" title="All 2 branches missed.">        &amp;&amp; username.equals(user.username)</span>
-<span class="nc bnc" id="L68" title="All 2 branches missed.">        &amp;&amp; currentSong.equals(user.currentSong)</span>
-<span class="nc bnc" id="L69" title="All 2 branches missed.">        &amp;&amp; Arrays.equals(connections, user.connections)</span>
-<span class="nc bnc" id="L70" title="All 2 branches missed.">        &amp;&amp; Arrays.equals(historicalSongPoint, user.historicalSongPoint)</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">        &amp;&amp; Arrays.equals(historicalConnections, user.historicalConnections);</span>
   }
 
-  @Override
-  public int hashCode() {
-<span class="nc" id="L76">    int result = Objects.hash(username, membershipLength);</span>
-<span class="nc" id="L77">    result = 31 * result + currentSong.hashCode();</span>
-<span class="nc" id="L78">    result = 31 * result + Arrays.hashCode(connections);</span>
-<span class="nc" id="L79">    result = 31 * result + Arrays.hashCode(historicalSongPoint);</span>
-<span class="nc" id="L80">    result = 31 * result + Arrays.hashCode(historicalConnections);</span>
-<span class="nc" id="L81">    return result;</span>
+  /**
+   * Uses a running average formula to update the historical song point given a new song point.
+   *
+   * @param newSongPoint - the new song point to update the historical point with
+   */
+  public void updateHistoricalSongPoint(double[] newSongPoint) {
+    // current average point + [(new point - current average point) / membershipLength]
+<span class="fc" id="L184">    this.membershipLength++; // n increases by 1 because a new point is being added to average</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">    if (this.membershipLength == 1) {</span>
+<span class="fc" id="L186">      this.setHistoricalSongPoint(this.getCurrentSong().getPoint());</span>
+    } else {
+<span class="fc" id="L188">      double[] newHistoricalSongPoint = new double[6];</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">      for (int i = 0; i &lt; newSongPoint.length; i++) {</span>
+<span class="fc" id="L190">        newHistoricalSongPoint[i] = newSongPoint[i] - this.getHistoricalSongPoint()[i];</span>
+<span class="fc" id="L191">        newHistoricalSongPoint[i] = newHistoricalSongPoint[i] / this.getMembershipLength();</span>
+<span class="fc" id="L192">        newHistoricalSongPoint[i] = newHistoricalSongPoint[i] + this.getHistoricalSongPoint()[i];</span>
+      }
+<span class="fc" id="L194">      this.setHistoricalSongPoint(newHistoricalSongPoint);</span>
+    }
+<span class="fc" id="L196">  }</span>
+
+  /**
+   * Uses a nearest neighbors search on the user given a KdTree of Songs to find their connections
+   * based on everyone's most recently played song. Note that this user is excluded from the nearest
+   * neighbors search to prevent a user from being their own connection.
+   *
+   * @param songTree - a KdTree with Songs as nodes, using the features point
+   * @return an array of userIds representing top 5 ranked user connections.
+   */
+  public String[] findConnections(KdTree&lt;Song&gt; songTree) {
+<span class="fc" id="L207">    HashSet&lt;Song&gt; excluded = new HashSet&lt;Song&gt;();</span>
+<span class="fc" id="L208">    excluded.add(this.getCurrentSong());</span>
+<span class="fc" id="L209">    PriorityQueue&lt;Song&gt; connectionsQueue =</span>
+<span class="fc" id="L210">        songTree.kdTreeSearch(</span>
+            &quot;neighbors&quot;,
+            5,
+<span class="fc" id="L213">            this.getCurrentSong(),</span>
+<span class="fc" id="L214">            new DistanceSorter(this.getCurrentSong()),</span>
+            excluded);
+    // reverse order of connections for array bc queue is in decreasing order of distance
+<span class="fc" id="L217">    String[] connections = new String[5];</span>
+<span class="fc" id="L218">    int i = connectionsQueue.size() - 1;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">    for (Song song : connectionsQueue) {</span>
+<span class="fc" id="L220">      connections[i] = song.getUserId();</span>
+<span class="fc" id="L221">      i--;</span>
+<span class="fc" id="L222">    }</span>
+<span class="fc" id="L223">    return connections;</span>
   }
 
-  public String getUsername() {
-<span class="nc" id="L85">    return this.username;</span>
+  /**
+   * Uses a nearest neighbors search on the user given a KdTree of Users to find their all-time
+   * connections based on everyone's running average of retrieved song data. Note that this user is
+   * excluded from the nearest neighbors search to prevent a user from being their own connection.
+   *
+   * @param userTree - a KdTree with Users as nodes, using the historicalSongPoint
+   * @return an array of userIds representing top 5 ranked user connections.
+   */
+  public String[] findHistoricalConnections(KdTree&lt;User&gt; userTree) {
+<span class="fc" id="L235">    HashSet&lt;User&gt; excluded = new HashSet&lt;User&gt;();</span>
+<span class="fc" id="L236">    excluded.add(this);</span>
+<span class="fc" id="L237">    PriorityQueue&lt;User&gt; connectionsQueue =</span>
+<span class="fc" id="L238">        userTree.kdTreeSearch(&quot;neighbors&quot;, 5, this, new DistanceSorter(this), excluded);</span>
+    // reverse order of connections for array bc queue is in decreasing order of distance
+<span class="fc" id="L240">    String[] connections = new String[5];</span>
+<span class="fc" id="L241">    int i = connectionsQueue.size() - 1;</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">    for (User user : connectionsQueue) {</span>
+<span class="fc" id="L243">      connections[i] = user.getUserId();</span>
+<span class="fc" id="L244">      i--;</span>
+<span class="fc" id="L245">    }</span>
+<span class="fc" id="L246">    return connections;</span>
   }
 
-  public void setUsername(String username) {
-<span class="nc" id="L89">    this.username = username;</span>
-<span class="nc" id="L90">  }</span>
-
-  public int getMembershipLength() {
-<span class="nc" id="L93">    return this.membershipLength;</span>
-  }
-
-  public void setMembershipLength(int membershipLength) {
-<span class="nc" id="L97">    this.membershipLength = membershipLength;</span>
-<span class="nc" id="L98">  }</span>
-
-  public Song getCurrentSong() {
-<span class="nc" id="L101">    return currentSong;</span>
-  }
-
-  public void setCurrentSong(Song currentSong) {
-<span class="nc" id="L105">    this.currentSong = currentSong;</span>
-<span class="nc" id="L106">  }</span>
-
-  public String[] getConnections() {
-<span class="nc" id="L109">    return this.connections.clone();</span>
-  }
-
-  public void setConnections(String[] connections) {
-<span class="nc" id="L113">    this.connections = connections;</span>
-<span class="nc" id="L114">  }</span>
-
-  public float[] getHistoricalSongPoint() {
-<span class="nc" id="L117">    return this.historicalSongPoint.clone();</span>
-  }
-
-  public void setHistoricalSongPoint(float[] historicalSongPoint) {
-<span class="nc" id="L121">    this.historicalSongPoint = historicalSongPoint;</span>
-<span class="nc" id="L122">  }</span>
-
-  public String[] getHistoricalConnections() {
-<span class="nc" id="L125">    return this.historicalConnections.clone();</span>
-  }
-
-  public void setHistoricalConnections(String[] historicalConnections) {
-<span class="nc" id="L129">    this.historicalConnections = historicalConnections;</span>
-<span class="nc" id="L130">  }</span>
-
+  /**
+   * Creates a clone of the user object for use in the getUser() method in a UserDatabase for
+   * defensive programming.
+   *
+   * @return a clone of the user.
+   */
   @Override
   public User clone() {
+<span class="fc" id="L257">    User clone = null;</span>
     try {
-<span class="nc" id="L135">      User clone = (User) super.clone();</span>
-      // TODO: copy mutable state here, so the clone can't change the internals of the original
-<span class="nc" id="L137">      clone.setUsername(this.getUsername());</span>
-<span class="nc" id="L138">      clone.setMembershipLength(this.getMembershipLength());</span>
-<span class="nc" id="L139">      clone.setCurrentSong(this.getCurrentSong());</span>
-<span class="nc" id="L140">      clone.setConnections(this.getConnections());</span>
-<span class="nc" id="L141">      clone.setHistoricalSongPoint(this.getHistoricalSongPoint());</span>
-<span class="nc" id="L142">      clone.setHistoricalConnections(this.getHistoricalConnections());</span>
-<span class="nc" id="L143">      return clone;</span>
-<span class="nc" id="L144">    } catch (CloneNotSupportedException e) {</span>
-<span class="nc" id="L145">      throw new AssertionError();</span>
-    }
+<span class="fc" id="L259">      clone = (User) super.clone();</span>
+<span class="nc" id="L260">    } catch (CloneNotSupportedException e) {</span>
+<span class="nc" id="L261">      e.printStackTrace();</span>
+<span class="nc" id="L262">      throw new RuntimeException(e);</span>
+<span class="fc" id="L263">    }</span>
+    // copy mutable state here, so the clone can't change the internals of the original
+<span class="fc" id="L265">    clone.setUserId(this.getUserId());</span>
+<span class="fc" id="L266">    clone.setDisplayName(this.getDisplayName());</span>
+<span class="fc" id="L267">    clone.setRefreshToken(this.getRefreshToken());</span>
+<span class="fc" id="L268">    clone.setMembershipLength(this.getMembershipLength());</span>
+<span class="fc" id="L269">    clone.setCurrentSong(this.getCurrentSong());</span>
+<span class="fc" id="L270">    clone.setConnections(this.getConnections());</span>
+<span class="fc" id="L271">    clone.setHistoricalSongPoint(this.getHistoricalSongPoint());</span>
+<span class="fc" id="L272">    clone.setHistoricalConnections(this.getHistoricalConnections());</span>
+<span class="fc" id="L273">    clone.setSongLibrary(this.getSongLibrary());</span>
+<span class="fc" id="L274">    return clone;</span>
   }
 
-  public void updateHistoricalSongPoint(float[] newSongPoint) {
-    // TODO: implement with incremental / running average formula
-<span class="nc" id="L151">  }</span>
-
   @Override
-  public float[] getPoint() {
-<span class="nc" id="L155">    return this.getHistoricalSongPoint();</span>
+  public double[] getPoint() {
+<span class="fc" id="L279">    return this.getHistoricalSongPoint();</span>
   }
 
   @Override
   public int getDimension() {
-<span class="nc" id="L160">    return this.getHistoricalSongPoint().length;</span>
+<span class="fc" id="L284">    return this.getHistoricalSongPoint().length;</span>
   }
 
   @Override
   public double euclideanDistance(KdTreeNode node) {
-<span class="nc" id="L165">    float[] currentVals = this.getHistoricalSongPoint();</span>
-<span class="nc" id="L166">    float[] targetVals = node.getPoint();</span>
-<span class="nc" id="L167">    float sum = 0;</span>
-<span class="nc bnc" id="L168" title="All 2 branches missed.">    for (int i = 0; i &lt; currentVals.length; i++) {</span>
-<span class="nc" id="L169">      sum += Math.pow(currentVals[i] - targetVals[i], 2);</span>
+<span class="fc" id="L289">    double[] currentVals = this.getHistoricalSongPoint();</span>
+<span class="fc" id="L290">    double[] targetVals = node.getPoint();</span>
+<span class="fc" id="L291">    double sum = 0;</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">    for (int i = 0; i &lt; currentVals.length; i++) {</span>
+<span class="fc" id="L293">      sum += Math.pow(currentVals[i] - targetVals[i], 2);</span>
     }
-<span class="nc" id="L171">    return Math.sqrt(sum);</span>
+<span class="fc" id="L295">    return Math.sqrt(sum);</span>
   }
+
+  @Override
+  public boolean equals(Object o) {
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L301">      return true;</span>
+    }
+<span class="pc bpc" id="L303" title="2 of 4 branches missed.">    if (o == null || this.getClass() != o.getClass()) {</span>
+<span class="nc" id="L304">      return false;</span>
+    }
+<span class="fc" id="L306">    User user = (User) o;</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">    return this.membershipLength == user.membershipLength</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        &amp;&amp; this.userId.equals(user.userId)</span>
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">        &amp;&amp; this.displayName.equals(user.displayName)</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">        &amp;&amp; Objects.equals(this.refreshToken, user.refreshToken)</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">        &amp;&amp; this.currentSong.equals(user.currentSong)</span>
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        &amp;&amp; Arrays.equals(this.connections, user.connections)</span>
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        &amp;&amp; Arrays.equals(this.historicalSongPoint, user.historicalSongPoint)</span>
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">        &amp;&amp; Arrays.equals(this.historicalConnections, user.historicalConnections)</span>
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        &amp;&amp; Objects.equals(this.songLibrary, user.songLibrary);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="fc" id="L320">    int result = Objects.hash(userId, membershipLength);</span>
+<span class="fc" id="L321">    result = 31 * result + currentSong.hashCode();</span>
+<span class="fc" id="L322">    result = 31 * result + Arrays.hashCode(connections);</span>
+<span class="fc" id="L323">    result = 31 * result + Arrays.hashCode(historicalSongPoint);</span>
+<span class="fc" id="L324">    result = 31 * result + Arrays.hashCode(historicalConnections);</span>
+<span class="fc" id="L325">    return result;</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="fc" id="L330">    return &quot;User{&quot;</span>
+        + &quot;userId='&quot;
+        + userId
+        + '\''
+        + &quot;, displayName='&quot;
+        + displayName
+        + '\''
+        + &quot;, refreshToken='&quot;
+        + refreshToken
+        + '\''
+        + &quot;, membershipLength=&quot;
+        + membershipLength
+        + &quot;, currentSong=&quot;
+        + currentSong
+        + &quot;, connections=&quot;
+<span class="fc" id="L345">        + Arrays.toString(connections)</span>
+        + &quot;, historicalSongPoint=&quot;
+<span class="fc" id="L347">        + Arrays.toString(historicalSongPoint)</span>
+        + &quot;, historicalConnections=&quot;
+<span class="fc" id="L349">        + Arrays.toString(historicalConnections)</span>
+        + &quot;, songLibrary=&quot;
+        + songLibrary
+        + '}';
+  }
+
+  public String getUserId() {
+<span class="fc" id="L356">    return this.userId;</span>
+  }
+
+  public void setUserId(String userId) {
+<span class="fc" id="L360">    this.userId = userId;</span>
+<span class="fc" id="L361">  }</span>
+
+  public String getDisplayName() {
+<span class="fc" id="L364">    return displayName;</span>
+  }
+
+  public void setDisplayName(String displayName) {
+<span class="fc" id="L368">    this.displayName = displayName;</span>
+<span class="fc" id="L369">  }</span>
+
+  public String getRefreshToken() {
+<span class="fc" id="L372">    return refreshToken;</span>
+  }
+
+  public void setRefreshToken(String refreshToken) {
+<span class="fc" id="L376">    this.refreshToken = refreshToken;</span>
+<span class="fc" id="L377">  }</span>
+
+  public int getMembershipLength() {
+<span class="fc" id="L380">    return this.membershipLength;</span>
+  }
+
+  public void setMembershipLength(int membershipLength) {
+<span class="fc" id="L384">    this.membershipLength = membershipLength;</span>
+<span class="fc" id="L385">  }</span>
+
+  public Song getCurrentSong() {
+<span class="fc" id="L388">    return currentSong.clone();</span>
+  }
+
+  public void setCurrentSong(Song currentSong) {
+<span class="fc" id="L392">    this.currentSong = currentSong;</span>
+<span class="fc" id="L393">  }</span>
+
+  public String[] getConnections() {
+<span class="fc" id="L396">    return this.connections.clone();</span>
+  }
+
+  public void setConnections(String[] connections) {
+<span class="fc" id="L400">    this.connections = connections;</span>
+<span class="fc" id="L401">  }</span>
+
+  public double[] getHistoricalSongPoint() {
+<span class="fc" id="L404">    return this.historicalSongPoint.clone();</span>
+  }
+
+  public void setHistoricalSongPoint(double[] historicalSongPoint) {
+<span class="fc" id="L408">    this.historicalSongPoint = historicalSongPoint;</span>
+<span class="fc" id="L409">  }</span>
+
+  public String[] getHistoricalConnections() {
+<span class="fc" id="L412">    return this.historicalConnections.clone();</span>
+  }
+
+  public void setHistoricalConnections(String[] historicalConnections) {
+<span class="fc" id="L416">    this.historicalConnections = historicalConnections;</span>
+<span class="fc" id="L417">  }</span>
+
+  public SongLibrary getSongLibrary() {
+<span class="fc" id="L420">    return this.songLibrary;</span>
+  }
+
+  public void setSongLibrary(SongLibrary songLibrary) {
+<span class="fc" id="L424">    this.songLibrary = songLibrary;</span>
+<span class="fc" id="L425">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

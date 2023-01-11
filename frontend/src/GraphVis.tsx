@@ -336,7 +336,7 @@ export function slidenum(bool: boolean){
 
 // Another simple function for determining whether or not we should display the sidebar.
 // Only returns "sidebar" element class name when the current google user ID passed in is nonempty.
-function sidebarloggedin(str: string, spotifylinked: boolean): string{
+export function sidebarloggedin(str: string, spotifylinked: boolean): string{
     if (str != "" && spotifylinked){
         return "sidebar";
     }
@@ -345,7 +345,7 @@ function sidebarloggedin(str: string, spotifylinked: boolean): string{
 
 // A nearly identical function used for showing and hiding sidebar elements based on whether or not we've logged in to spotify.
 // Takes in the success class name as a parameter since we use this on two elements with different class names.
-function fullyloggedin(bool: boolean, classname: string): string{
+export function fullyloggedin(bool: boolean, classname: string): string{
     if(bool){
         return classname
     }
@@ -355,7 +355,7 @@ function fullyloggedin(bool: boolean, classname: string): string{
 }
 
 // A function that returns some number of periods based on the current value of the global animation timer
-function dots(Timer: number): string{
+export function dots(Timer: number): string{
     if(Timer<1/3){
         return "."
     }
@@ -367,7 +367,7 @@ function dots(Timer: number): string{
 
 // A simple function that takes in a string and replaces the end of the string with "..."
 // if the string has more than "len" characters.
-function textbuff(str: string, len: number): string{
+export function textbuff(str: string, len: number): string{
     if(str == undefined){
         return "STRING UNDEFINED"
     }
@@ -432,7 +432,7 @@ export default function GraphVis(CurrentGoogleUser: string, spotifyLinked: boole
     else{
         return <div key = "wrapper" className = "wrapper">
                 {/* Sidebar background */}
-                <div key = "sidebardiv" className = {sidebarloggedin(CurrentGoogleUser,spotifyLinked)}>
+                <div key = "sidebardiv" className = {sidebarloggedin(CurrentGoogleUser,spotifyLinked)} aria-label = {sidebarloggedin(CurrentGoogleUser,spotifyLinked)}>
                     {/* defaultbar, aka zoomed out sidebar panel */}
                     <div key = "defaultbar" className = {fullyloggedin(spotifyLinked,"defaultbar")} aria-label="user sidebar for displaying your current matches">
                         <h3 aria-label={"Welcome, " + getdatastrings(curruser,0, userdatastrings) + "!"}>

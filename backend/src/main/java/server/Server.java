@@ -84,6 +84,7 @@ public class Server {
     } else {
       db = new FirestoreDatabase(FIRESTORE_JSON_FILEPATH, System.getenv("FIRESTORE_PROJECT_ID"));
     }
+    System.out.println(System.getenv("FIRESTORE_PROJECT_ID"));
 
     // Setting up the handler for the GET endpoints
     Spark.get("load-song-features", new LoadSongFeaturesHandler(db));

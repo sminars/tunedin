@@ -11,9 +11,9 @@ public class AxisSorter implements Comparator&lt;KdTreeNode&gt; {
    *
    * @param currentAxis integer representing an axis by the index of an array.
    */
-<span class="nc" id="L14">  public AxisSorter(int currentAxis) {</span>
-<span class="nc" id="L15">    this.axis = currentAxis;</span>
-<span class="nc" id="L16">  }</span>
+<span class="fc" id="L14">  public AxisSorter(int currentAxis) {</span>
+<span class="fc" id="L15">    this.axis = currentAxis;</span>
+<span class="fc" id="L16">  }</span>
 
   /**
    * Compares two KDTreeNodes by a certain index of their point arrays.
@@ -24,9 +24,9 @@ public class AxisSorter implements Comparator&lt;KdTreeNode&gt; {
    */
   @Override
   public int compare(KdTreeNode o1, KdTreeNode o2) {
-<span class="nc" id="L27">    float[] o1Vals = o1.getPoint();</span>
-<span class="nc" id="L28">    float[] o2Vals = o2.getPoint();</span>
-<span class="nc" id="L29">    return Float.compare(o1Vals[this.axis], o2Vals[this.axis]);</span>
+<span class="fc" id="L27">    double[] o1Vals = o1.getPoint();</span>
+<span class="fc" id="L28">    double[] o2Vals = o2.getPoint();</span>
+<span class="fc" id="L29">    return Double.compare(o1Vals[this.axis], o2Vals[this.axis]);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
