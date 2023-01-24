@@ -5,8 +5,6 @@ Dylan Lee (dlee197)\
 Dani Tamesis (dtamesis)\
 Chance Emerson (cemerso3)
 
-[Repository Link](https://github.com/cs0320-f2022/term-project-cemerso3-dlee197-dtamesis-sminars/)
-
 <figure>
 <img src="frontend/src/images/defaultview.png" width="100%" height="100%">
 
